@@ -13,11 +13,7 @@
   # Use the GRUB 2 boot loader.
   boot.loader.grub.enable = true;
   boot.loader.grub.version = 2;
-  # boot.loader.grub.efiSupport = true;
-  # boot.loader.grub.efiInstallAsRemovable = true;
-  # boot.loader.efi.efiSysMountPoint = "/boot/efi";
-  # Define on which hard drive you want to install Grub.
-  boot.loader.grub.device = "/dev/sda"; # or "nodev" for efi only
+  boot.loader.grub.device = "/dev/sda";
 
   networking.hostName = "nixos"; # Define your hostname.
 
@@ -28,21 +24,12 @@
   # BluetoothManager
   services.blueman.enable = true;
 
-#  networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-#  networking.wireless.interfaces = [ "wlp13s0" ];
-#  networking.wireless.networks.TP-Link_8220.pskRaw = "0cb54eed66be2954e72368deebca0a92bedd500aea65a90fc7361891e91fd39e";
-#  #networking.wireless.userControlled.enable = true;
-
   # The global useDHCP flag is deprecated, therefore explicitly set to false here.
   # Per-interface useDHCP will be mandatory in the future, so this generated config
   # replicates the default behaviour.
   networking.useDHCP = false;
   networking.interfaces.enp14s0.useDHCP = true;
   networking.interfaces.wlp13s0.useDHCP = true;
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Set your time zone.
   time.timeZone = "Europe/Warsaw";
@@ -60,8 +47,13 @@
     enable = true;
     desktopManager.lxqt.enable = true;
     displayManager.defaultSession = "lxqt";
+#    displayManager.setupCommands = ''
+#      # workaround for using NVIDIA Optimus without Bumblebee
+#      xrandr --setprovideroutputsource modesetting NVIDIA-0
+#      xrandr --auto
+#    '';
     # Configure keymap in X11
-    layout = "us,ru";
+    layout = "us,ru,pl";
     xkbOptions = "eurosign:e";
     # Enable touchpad support (enabled default in most desktopManager).
     libinput = {
@@ -75,18 +67,20 @@
         naturalScrolling = true;
       };
     };
-    videoDrivers = [ "modesetting" ];
-    # videoDrivers = [ "modesetting" "nvidia" ];
+    # videoDrivers = [ "modesetting" ];
+    # videoDrivers = [ "nvidia" "modesetting" ];
+    videoDrivers = [ "nvidia" ];
+    dpi = 96;
   };
 
-#  hardware.nvidia.prime = {
-#    sync.enable = true;
-#    intelBusId = "PCI:0:2:0";
-#    nvidiaBusId = "PCI:1:0:0";
-#  };
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
+  # Nvidia
+  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.legacy_390;
+  hardware.nvidia.prime = {
+    sync.enable = true;
+    intelBusId = "PCI:0:2:0";
+    nvidiaBusId = "PCI:1:0:0";
+  };
+  # hardware.nvidia.modesetting.enable = true;
 
   # Enable sound.
   sound.enable = true;
@@ -118,70 +112,45 @@
     "steam-original"
     "steam-runtime"
     "stm32cubemx"
-    "viber"
-    "vscode-extension-ms-vscode-cpptools"
+    # "vscode-extension-ms-vscode-cpptools"
     "zerotierone"
+    "unigine-valley"
   ];
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs;
-    let
-      vscodiumExtensions = (with vscode-extensions; [
-          vscodevim.vim
-          jnoortheen.nix-ide
-          ms-vscode.cpptools
-        ]) ++ vscode-utils.extensionsFromVscodeMarketplace [
-        {
-          name = "language-x86-64-assembly";
-          publisher = "13xforever";
-          version = "3.0.0";
-          sha256 = "0lxg58hgdl4d96yjgrcy2dbacxsc3wz4navz23xaxcx1bgl1i2y0";
-        }
-        {
-          name = "linkerscript";
-          publisher = "ZixuanWang";
-          version = "1.0.2";
-          sha256 = "0rr5mz8g8myskgixiw76rwda8g955a1al8kk4s30b0byfaszia17";
-        }
-      ];
-      vscodium-with-extensions = vscode-with-extensions.override {
-        vscode = vscodium;
-        vscodeExtensions = vscodiumExtensions;
-      };
-    in
-    [
-      vscodium-with-extensions
-      tdesktop
-      viber
-      zerotierone
-      git
-      neovim
-      wget
-      firefox
-      chromium
-      qbittorrent
-      redshift
-      krita
-      freerdp
-      smplayer
-      mpv
-      # playerctl
-      android-studio
-      pass
-      socat
-      openocd
-      stm32cubemx
-      gcc-arm-embedded
-      jetbrains.pycharm-community
-      gcc
-      gnumake
-      p7zip
-      ripgrep
-      # steam-run
-      discord
-      skype
-    ];
+  environment.systemPackages = with pkgs; [
+    unigine-valley
+    vscodium-fhs
+    tdesktop
+    zerotierone
+    git
+    neovim
+    wget
+    firefox
+    chromium
+    qbittorrent
+    # redshift
+    krita
+    freerdp
+    smplayer
+    mpv
+    # playerctl
+    # android-studio
+    pass
+    socat
+    openocd
+    stm32cubemx
+    gcc-arm-embedded
+    jetbrains.pycharm-community
+    gcc
+    gnumake
+    p7zip
+    ripgrep
+    # steam-run
+    discord
+    skype
+  ];
 
   programs.steam.enable = true;
 
@@ -202,25 +171,10 @@
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
-#  location.provider = "geoclue2";
-#  services.redshift = {
-#    enable = true;
-#    temperature = {
-#      day = 4500;
-#      night = 4500;
-#    };
-#  };
-
   services.zerotierone = {
     enable = true;
     joinNetworks = [ "d3ecf5726d11fd54" ];
   };
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
