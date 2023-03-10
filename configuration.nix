@@ -10,6 +10,9 @@
       ./hardware-configuration.nix
     ];
 
+  virtualisation.virtualbox.host.enable = true;
+  users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
+
   # Use the GRUB 2 boot loader.
   boot.loader.grub.enable = true;
   boot.loader.grub.version = 2;
@@ -34,8 +37,11 @@
   # Set your time zone.
   time.timeZone = "Europe/Warsaw";
 
-  # Select internationalisation properties.
-  i18n.defaultLocale = "en_US.UTF-8";
+#  # Select input method.
+#  i18n.inputMethod = {
+#    enabled = "fcitx5";
+#    fcitx5.addons = with pkgs; [ fcitx5-mozc ];
+#  };
 
   console = {
     font = "Lat2-Terminus16";
@@ -47,14 +53,9 @@
     enable = true;
     desktopManager.lxqt.enable = true;
     displayManager.defaultSession = "lxqt";
-#    displayManager.setupCommands = ''
-#      # workaround for using NVIDIA Optimus without Bumblebee
-#      xrandr --setprovideroutputsource modesetting NVIDIA-0
-#      xrandr --auto
-#    '';
     # Configure keymap in X11
     layout = "us,ru,pl";
-    xkbOptions = "eurosign:e";
+    # xkbOptions = "eurosign:e";
     # Enable touchpad support (enabled default in most desktopManager).
     libinput = {
       enable = true;
@@ -67,20 +68,20 @@
         naturalScrolling = true;
       };
     };
-    # videoDrivers = [ "modesetting" ];
-    # videoDrivers = [ "nvidia" "modesetting" ];
     videoDrivers = [ "nvidia" ];
-    dpi = 96;
+    # dpi = 96;
   };
 
   # Nvidia
-  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.legacy_390;
-  hardware.nvidia.prime = {
-    sync.enable = true;
-    intelBusId = "PCI:0:2:0";
-    nvidiaBusId = "PCI:1:0:0";
+  hardware.nvidia = {
+    package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
+    modesetting.enable = true;
+    prime = {
+      offload.enable = true;
+      nvidiaBusId = "PCI:1:0:0";
+      intelBusId = "PCI:0:2:0";
+    };
   };
-  # hardware.nvidia.modesetting.enable = true;
 
   # Enable sound.
   sound.enable = true;
@@ -91,7 +92,7 @@
     bluetooth.enable = true;
     pulseaudio = {
       enable = true;
-      extraModules = [ pkgs.pulseaudio-modules-bt ];
+      # extraModules = [ pkgs.pulseaudio-modules-bt ];
       package = pkgs.pulseaudioFull;
     };
   };
@@ -103,60 +104,89 @@
   };
 
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-    "android-studio-stable"
     "discord"
     "nvidia-settings"
     "nvidia-x11"
-    "skypeforlinux"
+    # "skypeforlinux"
     "steam"
     "steam-original"
     "steam-runtime"
-    "stm32cubemx"
-    # "vscode-extension-ms-vscode-cpptools"
-    "zerotierone"
     "unigine-valley"
+    # "android-studio-stable"
+    # "vscode-extension-ms-vscode-cpptools"
+    # "stm32cubemx"
+    # "zerotierone"
   ];
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    unigine-valley
-    vscodium-fhs
-    tdesktop
-    zerotierone
-    git
-    neovim
-    wget
-    firefox
-    chromium
-    qbittorrent
-    # redshift
-    krita
-    freerdp
-    smplayer
-    mpv
-    # playerctl
-    # android-studio
-    pass
-    socat
-    openocd
-    stm32cubemx
-    gcc-arm-embedded
-    jetbrains.pycharm-community
-    gcc
-    gnumake
-    p7zip
-    ripgrep
-    # steam-run
-    discord
-    skype
-  ];
+  environment.systemPackages = with pkgs;
+    let
+      nvidia-offload = writeShellScriptBin "nvidia-offload" ''
+        export __NV_PRIME_RENDER_OFFLOAD=1
+        export __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0
+        export __GLX_VENDOR_LIBRARY_NAME=nvidia
+        export __VK_LAYER_NV_optimus=NVIDIA_only
+        exec -a "$0" "$@"
+      '';
+    in
+    [
+      nvidia-offload
+      unigine-valley
+      vscodium-fhs
+      tdesktop
+      git
+      # neovim
+      wget
+      firefox
+      chromium
+      qbittorrent
+      # redshift
+      krita
+      smplayer
+      mpv
+      # playerctl
+      # android-studio
+      pass
+      # jetbrains.pycharm-community
+      gcc
+      gnumake
+      p7zip
+      ripgrep
+      # skype
+      discord
+      # freerdp
+      # socat
+      # openocd
+      # stm32cubemx
+      # zerotierone
+      # gcc-arm-embedded
+      anki
+      xclip
+      djview
+      ardour
+      lmms
+      koreader
+      wine64
+      wineWowPackages.full
+      winetricks
+    ];
 
   programs.steam.enable = true;
 
+  programs.neovim = let unstable = import <nixos-unstable> {};
+      in {
+        enable = true;
+        defaultEditor = true;
+        package = unstable.neovim-unwrapped;
+      };
+
   fonts.fonts = with pkgs; [
     jetbrains-mono
+    noto-fonts-cjk
+    google-fonts
   ];
+  # fonts.fontconfig.hinting.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -171,10 +201,10 @@
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
-  services.zerotierone = {
-    enable = true;
-    joinNetworks = [ "d3ecf5726d11fd54" ];
-  };
+  # services.zerotierone = {
+  #   enable = true;
+  #   joinNetworks = [ "d3ecf5726d11fd54" ];
+  # };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
