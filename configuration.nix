@@ -115,7 +115,7 @@
     # "android-studio-stable"
     # "vscode-extension-ms-vscode-cpptools"
     # "stm32cubemx"
-    # "zerotierone"
+    "zerotierone"
   ];
 
   # List packages installed in system profile. To search, run:
@@ -159,7 +159,7 @@
       # socat
       # openocd
       # stm32cubemx
-      # zerotierone
+      zerotierone
       # gcc-arm-embedded
       anki
       xclip
@@ -201,10 +201,10 @@
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
-  # services.zerotierone = {
-  #   enable = true;
-  #   joinNetworks = [ "d3ecf5726d11fd54" ];
-  # };
+  services.zerotierone = {
+    enable = true;
+    joinNetworks = [ "6ab565387abbe732" ];
+  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
