@@ -10,17 +10,18 @@
       ./hardware-configuration.nix
     ];
 
-  # Use the GRUB 2 boot loader.
+  # Bootloader.
   boot.loader.grub = {
     enable = true;
-    version = 2;
     device = "/dev/sda";
+    useOSProber = true;
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.cas1no = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" ]; # Enable ‘sudo’ for the user.
+    description = "cas1no";
+    extraGroups = [ "networkmanager" "wheel" ];
   };
 
   # Set your time zone.
@@ -30,22 +31,23 @@
     # Define your hostname.
     hostName = "nixos";
 
-    # NetworkManager
+    # Enable networking
     networkmanager.enable = true;
-
-    # The global useDHCP flag is deprecated, therefore explicitly set to false here.
-    # Per-interface useDHCP will be mandatory in the future, so this generated config
-    # replicates the default behaviour.
-    useDHCP = false;
-    interfaces = {
-      enp14s0.useDHCP = true;
-      wlp13s0.useDHCP = true;
-    };
   };
 
-  console = {
-    font = "Lat2-Terminus16";
-    keyMap = "us";
+  # Select internationalisation properties.
+  i18n.defaultLocale = "en_US.UTF-8";
+
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "en_US.UTF-8";
+    LC_IDENTIFICATION = "en_US.UTF-8";
+    LC_MEASUREMENT = "en_US.UTF-8";
+    LC_MONETARY = "en_US.UTF-8";
+    LC_NAME = "en_US.UTF-8";
+    LC_NUMERIC = "en_US.UTF-8";
+    LC_PAPER = "en_US.UTF-8";
+    LC_TELEPHONE = "en_US.UTF-8";
+    LC_TIME = "en_US.UTF-8";
   };
 
   # List services that you want to enable:
@@ -56,17 +58,19 @@
     # BluetoothManager
     blueman.enable = true;
 
-    # Enable the X11 windowing system.
     xserver = {
+      # Enable the X11 windowing system.
       enable = true;
+      # Enable the LXQT Desktop Environment.
       desktopManager.lxqt.enable = true;
-      displayManager.defaultSession = "lxqt";
+      displayManager.lightdm.enable = true;
+      # Configure keymap in X11
+      layout = "us";
+      xkbVariant = "";
       # Enable touchpad support (enabled default in most desktopManager).
       libinput = {
         enable = true;
-        mouse = {
-          accelProfile = "flat";
-        };
+        mouse.accelProfile = "flat";
         touchpad = {
           accelProfile = "flat";
           accelSpeed = "1.0";
@@ -75,9 +79,29 @@
       };
       videoDrivers = [ "nvidia" ];
     };
+
+    # Enable sound with pipewire.
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+      # If you want to use JACK applications, uncomment this
+      #jack.enable = true;
+  
+      # use the example session manager (no others are packaged yet so this is enabled by default,
+      # no need to redefine it in your config for now)
+      #media-session.enable = true;
+    };
   };
 
-  # Hardware
+  sound = {
+    enable = true;
+    mediaKeys.enable = true;
+  };
+
+  security.rtkit.enable = true;
+
   hardware = {
     # Nvidia
     nvidia = {
@@ -93,16 +117,9 @@
     bluetooth.enable = true;
 
     pulseaudio = {
-      enable = true;
-      # extraModules = [ pkgs.pulseaudio-modules-bt ];
+      enable = false;
       package = pkgs.pulseaudioFull;
     };
-  };
-
-  # Enable sound.
-  sound = {
-    enable = true;
-    mediaKeys.enable = true;
   };
 
   fonts.fonts = with pkgs; [
@@ -116,8 +133,11 @@
     "nvidia-settings"
     "nvidia-x11"
     "steam"
+    "steam-run"
     "steam-original"
     "steam-runtime"
+    "calibre"
+    "unrar"
   ];
 
   # List packages installed in system profile. To search, run:
@@ -150,11 +170,15 @@
       ripgrep
       discord
       xclip
+      (calibre.override {
+        unrarSupport = true;
+      })
     ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   programs = {
+    # Enable network manager applet
     nm-applet.enable = true;
 
     steam.enable = true;
@@ -178,7 +202,5 @@
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "21.05"; # Did you read the comment?
-
+  system.stateVersion = "23.05"; # Did you read the comment?
 }
-
