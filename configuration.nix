@@ -65,19 +65,21 @@
       desktopManager.lxqt.enable = true;
       displayManager.lightdm.enable = true;
       # Configure keymap in X11
-      layout = "us";
-      xkbVariant = "";
-      # Enable touchpad support (enabled default in most desktopManager).
-      libinput = {
-        enable = true;
-        mouse.accelProfile = "flat";
-        touchpad = {
-          accelProfile = "flat";
-          accelSpeed = "1.0";
-          naturalScrolling = true;
-        };
+      xkb = {
+        layout = "us";
       };
       videoDrivers = [ "nvidia" ];
+    };
+
+    # Enable touchpad support (enabled default in most desktopManager).
+    libinput = {
+      enable = true;
+      mouse.accelProfile = "flat";
+      touchpad = {
+        accelProfile = "flat";
+        accelSpeed = "1.0";
+        naturalScrolling = true;
+      };
     };
 
     # Enable sound with pipewire.
@@ -93,7 +95,19 @@
       # no need to redefine it in your config for now)
       #media-session.enable = true;
     };
+
+    redshift = {
+      enable = true;
+      temperature = {
+        day = 3000;
+        night = 3000;
+      };
+    };
   };
+
+  # Needed to make redshift work.
+  location.latitude = 0.0;
+  location.longitude = 0.0;
 
   sound = {
     enable = true;
@@ -122,7 +136,7 @@
     };
   };
 
-  fonts.fonts = with pkgs; [
+  fonts.packages = with pkgs; [
     jetbrains-mono
     noto-fonts-cjk
     google-fonts
@@ -139,6 +153,8 @@
     "calibre"
     "unrar"
   ];
+
+  nixpkgs.config.nvidia.acceptLicense = true;
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -173,6 +189,7 @@
       (calibre.override {
         unrarSupport = true;
       })
+      valgrind
     ];
 
   # Some programs need SUID wrappers, can be configured further or are
