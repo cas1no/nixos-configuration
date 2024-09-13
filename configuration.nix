@@ -24,6 +24,9 @@
     extraGroups = [ "networkmanager" "wheel" ];
   };
 
+  virtualisation.virtualbox.host.enable = true;
+  users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
+
   # Set your time zone.
   time.timeZone = "Europe/Warsaw";
 
@@ -152,6 +155,9 @@
     "steam-runtime"
     "calibre"
     "unrar"
+    "chromium"
+    "chromium-unwrapped"
+    "widevine-cdm"
   ];
 
   nixpkgs.config.nvidia.acceptLicense = true;
@@ -174,7 +180,9 @@
       git
       wget
       firefox
-      chromium
+      (chromium.override {
+        enableWideVine = true;
+      })
       qbittorrent
       krita
       smplayer
